@@ -16,40 +16,18 @@ ATurret::ATurret()
 	PrimaryActorTick.bCanEverTick = true;
 }
 
-void ATurret::Fire() {
-	// Try and fire a projectile
-	if (ProjectileClass != nullptr)
-	{
-		UWorld* const World = GetWorld();
-		if (World != nullptr)
-		{
-			APlayerController* PlayerController = Cast<APlayerController>(characterMovement->GetController());
-			const FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
-			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-			const FVector SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
-	
-			//Set Spawn Collision Handling Override
-			FActorSpawnParameters ActorSpawnParams;
-			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
-	
-			// Spawn the projectile at the muzzle
-			World->SpawnActor<ACMP302_CourseworkProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-		}
-	}
-	
-	// Try and play the sound if specified
-	if (FireSound != nullptr)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, FireSound, characterMovement->GetActorLocation());
-	}
-}
-
 // Called when the game starts or when spawned
 void ATurret::BeginPlay()
 {
 	Super::BeginPlay();
 	
 	characterMovement = Cast<ACharacter>(UGameplayStatics::GetActorOfClass(GetWorld(), ACMP302_CourseworkCharacter::StaticClass()));
+
+	for (UActorComponent* ChildComponent : GetComponents()) {
+		if(ChildComponent->GetName().Equals("Shoot Position")) {
+			ShootPosition = Cast<UStaticMeshComponent>(ChildComponent);
+		}
+	}
 }
 
 // Called every frame
@@ -57,6 +35,8 @@ void ATurret::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	Timer += DeltaTime;
+	
 	FVector TargetLocation = characterMovement->GetTransform().GetLocation();
 	
 	float Distance = FVector::Distance(TargetLocation, GetTransform().GetLocation());
@@ -80,7 +60,34 @@ void ATurret::Tick(float DeltaTime)
 
 	if(Distance > ShootDistance)
 		return;
-	
-	Fire();
+
+	//Can shoot?
+	if(Timer >= FireRate) {
+		//Reset timer
+		Timer = 0;
+		
+		Fire(NewRotation);
+	}
 }
 
+void ATurret::Fire(FRotator TargetDirection) {
+	// Try and fire a projectile
+	if (ProjectileClass != nullptr)
+	{
+		UWorld* const World = GetWorld();
+		if (World != nullptr)
+		{
+			//Set Spawn Collision Handling Override
+			FActorSpawnParameters ActorSpawnParams;
+			//ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+			
+			// Spawn the projectile at the muzzle
+			World->SpawnActor<ACMP302_CourseworkProjectile>(ProjectileClass, ShootPosition->GetComponentLocation(), TargetDirection, ActorSpawnParams);
+		}
+	}
+	
+	// Try and play the sound if specified
+	if (FireSound != nullptr) {
+		UGameplayStatics::PlaySoundAtLocation(this, FireSound, characterMovement->GetActorLocation());
+	}
+}

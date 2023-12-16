@@ -35,6 +35,13 @@ public:
 	bool IsGrappling = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Grappling Hook", meta = (AllowPrivateAccess = "true"))
+	float GrapplingHookSpeed = 250000;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Grappling Hook", meta = (AllowPrivateAccess = "true"))
+	float GrapplingHookCooldown = 0.1f;
+	float Timer;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Grappling Hook", meta = (AllowPrivateAccess = "true"))
 	FVector GrapplingEndPosition;
 	
 	/** MappingContext */
@@ -66,6 +73,10 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="Weapon")
 	void StopGrapplingHook(const FInputActionValue& Value);
+
+public:
+	UFUNCTION()
+	void Update(float DeltaSeconds);
 
 protected:
 	/** Ends gameplay for this component. */

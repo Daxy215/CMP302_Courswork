@@ -102,6 +102,11 @@ void UTP_WeaponComponent::AttachWeapon(ACMP302_CourseworkCharacter* TargetCharac
 
 void UTP_WeaponComponent::FireGrapplingHook(const FInputActionValue& Value)
 {
+	if(Timer < GrapplingHookCooldown)
+		return;
+	
+	Timer = 0;
+	
 	// Get the player controller
 	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
 	
@@ -137,10 +142,37 @@ void UTP_WeaponComponent::FireGrapplingHook(const FInputActionValue& Value)
 
 void UTP_WeaponComponent::StopGrapplingHook(const FInputActionValue& Value)
 {
+	if(!IsGrappling)
+		return;
+	
 	IsGrappling = false;
 	
 	// Set the movement mode to falling
 	Character->GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+}
+
+void UTP_WeaponComponent::Update(float DeltaSeconds) {
+	Timer += DeltaSeconds;	
+	
+	if(!IsGrappling)
+		return;
+	
+	UCharacterMovementComponent* MyCharacterMovement = Character->GetCharacterMovement();
+	FVector ActorLocation = MyCharacterMovement->GetActorLocation();
+	FVector DirectionVector = (GrapplingEndPosition - ActorLocation).GetSafeNormal();
+	FVector ForwardVector = MyCharacterMovement->GetActorLocation().ForwardVector;
+	FVector UpVector = MyCharacterMovement->GetActorLocation().UpVector;
+	FVector MoveRightVector = FVector::CrossProduct(ForwardVector, UpVector);
+	FVector RightVector = MyCharacterMovement->GetActorLocation().RightVector;
+	FVector OverallVector = (RightVector * MoveRightVector) * 0.4f;
+	
+	float Distance = FVector::Distance(ActorLocation, Character->GetTransform().GetLocation());
+	
+	DirectionVector += OverallVector;
+	DirectionVector.Normalize();
+	DirectionVector *= GrapplingHookSpeed + (Distance * 100); //Speed
+	
+	MyCharacterMovement->AddForce(DirectionVector);
 }
 
 void UTP_WeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)

@@ -17,7 +17,7 @@ public:
 	// Sets default values for this actor's properties
 	ATurret();
 
-	void Fire();
+	void Fire(FRotator TargetDirection);
 
 protected:
 	// Called when the game starts or when spawned
@@ -43,11 +43,15 @@ public:
 	ACharacter* characterMovement;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UScene* ShootPosition;
+	UStaticMeshComponent* ShootPosition;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Turret Properties",  meta = (AllowPrivateAccess = "true"))
+    float FireRate = 2;
+	float Timer;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Turret Properties",  meta = (AllowPrivateAccess = "true"))
 	float RotationSpeed = 2;
-
+    
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Turret Properties",  meta = (AllowPrivateAccess = "true"))
 	float LookAtDistance = 1500;
 	

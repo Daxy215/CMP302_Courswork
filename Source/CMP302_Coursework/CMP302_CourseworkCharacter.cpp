@@ -67,25 +67,7 @@ void ACMP302_CourseworkCharacter::Tick(float DeltaSeconds)
 		return;
 	}
 	
-	if(!weapon->IsGrappling)
-		return;
-	
-	UCharacterMovementComponent* MyCharacterMovement = GetCharacterMovement();
-	FVector ActorLocation = MyCharacterMovement->GetActorLocation();
-	FVector DirectionVector = (weapon->GrapplingEndPosition - ActorLocation).GetSafeNormal();
-	FVector ForwardVector = MyCharacterMovement->GetActorLocation().ForwardVector;
-	FVector UpVector = MyCharacterMovement->GetActorLocation().UpVector;
-	FVector MoveRightVector = FVector::CrossProduct(ForwardVector, UpVector);
-	FVector RightVector = MyCharacterMovement->GetActorLocation().RightVector;
-	FVector OverallVector = (RightVector * MoveRightVector) * 0.4f;
-
-	float Distance = FVector::Distance(ActorLocation, GetTransform().GetLocation());
-	
-	DirectionVector += OverallVector;
-	DirectionVector.Normalize();
-	DirectionVector *= 250000 + (Distance * 100); //Speed
-	
-	GetCharacterMovement()->AddForce(DirectionVector);
+	weapon->Update(DeltaSeconds);
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
