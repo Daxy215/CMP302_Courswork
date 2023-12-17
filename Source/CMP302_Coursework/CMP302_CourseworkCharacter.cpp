@@ -38,12 +38,15 @@ ACMP302_CourseworkCharacter::ACMP302_CourseworkCharacter()
 	Mesh1P->CastShadow = false;
 	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
+	//Mesh1P->OnComponentHit.AddDynamic(this, &ACMP302_CourseworkCharacter::OnHit);
 }
 
 void ACMP302_CourseworkCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+	
+	Mesh1P->OnComponentBeginOverlap.AddDynamic(this, &ACMP302_CourseworkCharacter::OverlapBegin);
 
 	//Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
@@ -68,6 +71,17 @@ void ACMP302_CourseworkCharacter::Tick(float DeltaSeconds)
 	}
 	
 	weapon->Update(DeltaSeconds);
+}
+
+void ACMP302_CourseworkCharacter::OverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
+	
+	if(!OtherComp->ComponentHasTag("Projectile"))
+		return;
+	
+	//Stop grappling hook, if player is using it.
+	if(GetHasRifle() && weapon)
+		weapon->StopGrapplingHook(NULL);
 }
 
 //////////////////////////////////////////////////////////////////////////// Input

@@ -21,8 +21,8 @@ void ATurret::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	characterMovement = Cast<ACharacter>(UGameplayStatics::GetActorOfClass(GetWorld(), ACMP302_CourseworkCharacter::StaticClass()));
-
+	CharacterMovement = Cast<ACharacter>(UGameplayStatics::GetActorOfClass(GetWorld(), ACMP302_CourseworkCharacter::StaticClass()));
+	
 	for (UActorComponent* ChildComponent : GetComponents()) {
 		if(ChildComponent->GetName().Equals("Shoot Position")) {
 			ShootPosition = Cast<UStaticMeshComponent>(ChildComponent);
@@ -37,7 +37,7 @@ void ATurret::Tick(float DeltaTime)
 
 	Timer += DeltaTime;
 	
-	FVector TargetLocation = characterMovement->GetTransform().GetLocation();
+	FVector TargetLocation = CharacterMovement->GetTransform().GetLocation();
 	
 	float Distance = FVector::Distance(TargetLocation, GetTransform().GetLocation());
 	
@@ -45,8 +45,7 @@ void ATurret::Tick(float DeltaTime)
 		return;
 	
 	// Calculate the direction to the target location
-	FVector Direction = (TargetLocation - GetActorLocation()).GetSafeNormal2D(); // GetSafeNormal2D for 2D rotation
-	Direction.Z = 0; // Optionally, ignore Z-axis if you want the actor to look horizontally
+	FVector Direction = (TargetLocation - GetActorLocation()).GetSafeNormal();
 	
 	// Calculate the rotation needed to face the target
 	FRotator TargetRotation = Direction.Rotation();
@@ -54,16 +53,15 @@ void ATurret::Tick(float DeltaTime)
 	// Interpolate rotation gradually each frame
 	FRotator CurrentRotation = GetActorRotation();
 	FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, RotationSpeed);
-
+	
 	// Set the actor's rotation to the new interpolated rotation
 	SetActorRotation(NewRotation);
-
+	
 	if(Distance > ShootDistance)
 		return;
-
-	//Can shoot?
+	
+	// Can shoot?
 	if(Timer >= FireRate) {
-		//Reset timer
 		Timer = 0;
 		
 		Fire(NewRotation);
@@ -88,6 +86,6 @@ void ATurret::Fire(FRotator TargetDirection) {
 	
 	// Try and play the sound if specified
 	if (FireSound != nullptr) {
-		UGameplayStatics::PlaySoundAtLocation(this, FireSound, characterMovement->GetActorLocation());
+		UGameplayStatics::PlaySoundAtLocation(this, FireSound, CharacterMovement->GetActorLocation());
 	}
 }

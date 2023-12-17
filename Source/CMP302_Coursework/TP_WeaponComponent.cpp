@@ -107,10 +107,7 @@ void UTP_WeaponComponent::FireGrapplingHook(const FInputActionValue& Value)
 	
 	Timer = 0;
 	
-	// Get the player controller
-	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
-	
-	if (PlayerController)
+	if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
 	{
 		// Get the camera location and forward vector to start the trace
 		FVector CameraLocation;
@@ -140,10 +137,12 @@ void UTP_WeaponComponent::FireGrapplingHook(const FInputActionValue& Value)
 	}
 }
 
-void UTP_WeaponComponent::StopGrapplingHook(const FInputActionValue& Value)
+void UTP_WeaponComponent::StopGrapplingHook(const FInputActionValue& Value = 0)
 {
-	if(!IsGrappling)
-		return;
+	//if(!IsGrappling)
+	//	return;
+
+	UE_LOG(LogTemp, Warning, TEXT("HI"));
 	
 	IsGrappling = false;
 	
@@ -156,22 +155,34 @@ void UTP_WeaponComponent::Update(float DeltaSeconds) {
 	
 	if(!IsGrappling)
 		return;
+
+	/**
+	 * This code will get the direction between,
+	 * the player and the end point of the,
+	 * grappling hook, then adds a force towards,
+	 * the end point of the grappling hook.
+	 */
 	
 	UCharacterMovementComponent* MyCharacterMovement = Character->GetCharacterMovement();
 	FVector ActorLocation = MyCharacterMovement->GetActorLocation();
+
+	// Get Direction Between Player and End Point of grappling hook
 	FVector DirectionVector = (GrapplingEndPosition - ActorLocation).GetSafeNormal();
+
 	FVector ForwardVector = MyCharacterMovement->GetActorLocation().ForwardVector;
 	FVector UpVector = MyCharacterMovement->GetActorLocation().UpVector;
 	FVector MoveRightVector = FVector::CrossProduct(ForwardVector, UpVector);
 	FVector RightVector = MyCharacterMovement->GetActorLocation().RightVector;
 	FVector OverallVector = (RightVector * MoveRightVector) * 0.4f;
 	
+	// Get 
 	float Distance = FVector::Distance(ActorLocation, Character->GetTransform().GetLocation());
 	
 	DirectionVector += OverallVector;
 	DirectionVector.Normalize();
 	DirectionVector *= GrapplingHookSpeed + (Distance * 100); //Speed
 	
+	//Move The Player Towards The End Point of The grappling hook.
 	MyCharacterMovement->AddForce(DirectionVector);
 }
 
